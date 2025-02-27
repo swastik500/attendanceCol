@@ -8,9 +8,6 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(10), nullable=False)  # 'admin', 'teacher', 'student'
 
-class Course(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
 
 class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,3 +26,13 @@ class Attendance(db.Model):
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(10), nullable=False)  # 'Present' or 'Absent'
+
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+
+
+# # Create the database tables
+# with app.app_context():
+#     db.create_all()
