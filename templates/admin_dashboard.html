@@ -21,7 +21,7 @@
 
     <!-- Register Users Form -->
     <h2>Register a New User</h2>
-    <form action="{{ url_for('register_user') }}" method="POST">
+    <form action="{{ url_for('register_user_admin') }}" method="POST">
         <label for="username">Username:</label>
         <input type="text" name="username" required>
 
@@ -42,7 +42,8 @@
 
     <!-- Add Course Form -->
     <h2>Add a New Course</h2>
-    <form action="{{ url_for('add_course') }}" method="POST">
+    <form action="{{ url_for('admin_dashboard') }}" method="POST">
+
         <label for="name">Course Name:</label>
         <input type="text" name="name" required>
         <button type="submit">Add Course</button>
@@ -53,6 +54,7 @@
     <!-- Add Class Form -->
     <h2>Add a New Class</h2>
     <form action="{{ url_for('add_class') }}" method="POST">
+
         <label for="name">Class Name:</label>
         <input type="text" name="name" required>
 

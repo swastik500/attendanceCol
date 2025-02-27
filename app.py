@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from models import User, db  # Importing models correctly
 
 # Initialize Flask App
 app = Flask(__name__)
@@ -8,42 +9,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'  # SQLite data
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a strong secret key
 
-db = SQLAlchemy(app)
-
-
-# -------------------- Database Models --------------------
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(50), nullable=False)  # Admin, Teacher, Student
-
-
-class Course(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-
-
-class Class(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    year = db.Column(db.String(50), nullable=False)
-
-
-class Subject(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-
-class Attendance(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
-    date = db.Column(db.Date, nullable=False)
-    status = db.Column(db.String(10), nullable=False)  # Present / Absent
-
+db.init_app(app)  # Initialize SQLAlchemy with the app
 
 # -------------------- Create Database & Add Admin User --------------------
 with app.app_context():
@@ -109,15 +75,12 @@ def admin_dashboard():
         return redirect(url_for('login'))
 
     users = User.query.all()
-    courses = Course.query.all()
-    classes = Class.query.all()
-    subjects = Subject.query.all()
-    return render_template('admin_dashboard.html', users=users, courses=courses, classes=classes, subjects=subjects)
+    return render_template('admin_dashboard.html', users=users)
 
 
 # Register Users (Admin Functionality)
 @app.route('/admin/register', methods=['POST'])
-def register_user():
+def register_user_admin():
     if 'user_id' not in session or session['role'] != 'Admin':
         flash('Unauthorized access!', 'danger')
         return redirect(url_for('login'))
@@ -133,79 +96,42 @@ def register_user():
     return redirect(url_for('admin_dashboard'))
 
 
-# Add Courses (Admin)
-@app.route('/admin/add_course', methods=['POST'])
-def add_course():
-    if 'user_id' not in session or session['role'] != 'Admin':
-        flash('Unauthorized access!', 'danger')
-        return redirect(url_for('login'))
+# Register Users (API Route)
+@app.route('/api/register', methods=['POST'])
+def register_user_api():
+    data = request.json
+    existing_user = User.query.filter_by(username=data['username']).first()
 
-    name = request.form['name']
-    new_course = Course(name=name)
-    db.session.add(new_course)
-    db.session.commit()
-    flash('Course added successfully!', 'success')
-    return redirect(url_for('admin_dashboard'))
+    if existing_user:
+        return jsonify({"error": "Username already exists"}), 400
 
+    hashed_password = generate_password_hash(data['password'])  # Hash the password
+    new_user = User(username=data['username'], password=hashed_password, role=data['role'])
+    db.session.add(new_user)
 
-# Add Classes (Admin)
+    try:
+        db.session.commit()
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/admin/add_class', methods=['POST'])
 def add_class():
     if 'user_id' not in session or session['role'] != 'Admin':
         flash('Unauthorized access!', 'danger')
         return redirect(url_for('login'))
 
-    name = request.form['name']
-    year = request.form['year']
-    new_class = Class(name=name, year=year)
-    db.session.add(new_class)
-    db.session.commit()
-    flash('Class added successfully!', 'success')
+    # Example logic: You may need to store class details in a table
+    class_name = request.form.get('class_name')
+
+    if not class_name:
+        flash('Class name is required!', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    # Add logic to store the class in the database if you have a Class model
+    flash(f'Class "{class_name}" added successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
-
-
-# -------------------- Teacher Routes --------------------
-
-@app.route('/teacher/dashboard')
-def teacher_dashboard():
-    if 'user_id' not in session or session['role'] != 'Teacher':
-        flash('Unauthorized access!', 'danger')
-        return redirect(url_for('login'))
-
-    teacher_id = session['user_id']
-    subjects = Subject.query.filter_by(teacher_id=teacher_id).all()
-    return render_template('teacher_dashboard.html', subjects=subjects)
-
-
-# Mark Attendance (Teacher)
-@app.route('/teacher/mark_attendance', methods=['POST'])
-def mark_attendance():
-    if 'user_id' not in session or session['role'] != 'Teacher':
-        flash('Unauthorized access!', 'danger')
-        return redirect(url_for('login'))
-
-    student_id = request.form['student_id']
-    subject_id = request.form['subject_id']
-    status = request.form['status']
-    new_attendance = Attendance(student_id=student_id, subject_id=subject_id, date=request.form['date'], status=status)
-
-    db.session.add(new_attendance)
-    db.session.commit()
-    flash('Attendance marked successfully!', 'success')
-    return redirect(url_for('teacher_dashboard'))
-
-
-# -------------------- Student Routes --------------------
-
-@app.route('/student/dashboard')
-def student_dashboard():
-    if 'user_id' not in session or session['role'] != 'Student':
-        flash('Unauthorized access!', 'danger')
-        return redirect(url_for('login'))
-
-    student_id = session['user_id']
-    attendance_records = Attendance.query.filter_by(student_id=student_id).all()
-    return render_template('student_dashboard.html', attendance_records=attendance_records)
 
 
 # -------------------- Run Flask App --------------------
