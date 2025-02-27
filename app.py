@@ -74,21 +74,22 @@ def logout():
 
 
 # ---- ADMIN DASHBOARD ---- #
-@app.route('/admin')
+@app.route('/admin_dashboard')
 def admin_dashboard():
-    if 'user_id' in session and session['role'] == 'admin':
-        users = User.query.all()
-        classes = Class.query.all()
-        subjects = Subject.query.all()
-        courses = Course.query.all()
-        return render_template('admin_dashboard.html', users=users, classes=classes, subjects=subjects, courses=courses)
-    return redirect(url_for('login'))
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Unauthorized Access!', 'error')
+        return redirect(url_for('login'))
+    
+    users = User.query.all()
+    classes = Class.query.all()
+    courses = Course.query.all()
+    return render_template('admin_dashboard.html', users=users, classes=classes, courses=courses)
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if 'role' not in session or session['role'] != 'admin':
-        flash("Unauthorized Access!", "danger")
+        flash("Unauthorized Access!", "error")
         return redirect(url_for('login'))
 
     if request.method == 'POST':
@@ -96,18 +97,27 @@ def register():
         password = request.form.get('password')
         role = request.form.get('role')
 
-        if username and password and role:
-            existing_user = User.query.filter_by(username=username).first()
-            if existing_user:
-                flash("User already exists!", "warning")
-            else:
-                hashed_password = generate_password_hash(password)
-                new_user = User(username=username, password=hashed_password, role=role)
-                db.session.add(new_user)
-                db.session.commit()
-                flash("User registered successfully!", "success")
-        else:
-            flash("All fields are required!", "danger")
+        if not all([username, password, role]):
+            flash('All fields are required!', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists!', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, password=hashed_password, role=role)
+        db.session.add(new_user)
+        
+        try:
+            db.session.commit()
+            flash('User registered successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Error registering user!', 'error')
+        
+        return redirect(url_for('admin_dashboard'))
 
     users = User.query.all()
     return render_template('register.html', users=users)
@@ -210,16 +220,29 @@ def manage_classes():
 @app.route('/add_class', methods=['GET', 'POST'])
 def add_class():
     if 'user_id' in session and session['role'] == 'admin':
+        courses = Course.query.all()
         if request.method == 'POST':
-            name = request.form['name']
+            class_name = request.form['class_name']
+            course_id = request.form['course_id']
             year = request.form['year']
-
-            new_class = Class(name=name, year=year)
+            
+            if not class_name or not course_id or not year:
+                flash("All fields (class name, year, and course) are required!", "danger")
+                return render_template('add_class.html', courses=courses)
+            
+            existing_class = Class.query.filter_by(name=class_name).first()
+            if existing_class:
+                flash("Class with this name already exists!", "danger")
+                return render_template('add_class.html', courses=courses)
+            
+            new_class = Class(name=class_name, year=year, course_id=course_id)
             db.session.add(new_class)
             db.session.commit()
             flash("Class added successfully!", "success")
             return redirect(url_for('admin_dashboard'))
-        return render_template('add_class.html')  # Render form on GET request
+        
+        classes = Class.query.all()
+        return render_template('add_class.html', courses=courses, classes=classes)
     return "Unauthorized Access"
 
 
@@ -252,6 +275,30 @@ def add_subject():
     return "Unauthorized Access"
 
 
+@app.route('/manage_subjects', methods=['GET', 'POST'])
+def manage_subjects():
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        subject_name = request.form.get('subject_name')
+        class_id = request.form.get('class_id')
+        teacher_id = request.form.get('teacher_id')
+
+        if subject_name and class_id and teacher_id:
+            new_subject = Subject(name=subject_name, class_id=class_id, teacher_id=teacher_id)
+            db.session.add(new_subject)
+            db.session.commit()
+            flash("Subject added successfully!", "success")
+        else:
+            flash("All fields are required!", "danger")
+
+    subjects = Subject.query.all()
+    classes = Class.query.all()
+    teachers = User.query.filter_by(role='teacher').all()
+    return render_template('manage_subjects.html', subjects=subjects, classes=classes, teachers=teachers)
+
 @app.route('/delete_subject/<int:subject_id>')
 def delete_subject(subject_id):
     if 'user_id' in session and session['role'] == 'admin':
@@ -260,7 +307,7 @@ def delete_subject(subject_id):
             db.session.delete(subject)
             db.session.commit()
             flash("Subject deleted!", "success")
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('manage_subjects'))
     return "Unauthorized Access"
 
 
