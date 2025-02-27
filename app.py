@@ -7,10 +7,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'  # SQLite database
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a strong secret key
+
 db = SQLAlchemy(app)
 
 
-# Database Models
+# -------------------- Database Models --------------------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
@@ -44,10 +45,22 @@ class Attendance(db.Model):
     status = db.Column(db.String(10), nullable=False)  # Present / Absent
 
 
-# Ensure database tables are created
+# -------------------- Create Database & Add Admin User --------------------
 with app.app_context():
     db.create_all()
 
+    # Add admin users if they do not exist
+    admin_emails = ["swip@gmail.com", "swip@2004"]
+    for admin_email in admin_emails:
+        existing_admin = User.query.filter_by(username=admin_email).first()
+        if not existing_admin:
+            hashed_password = generate_password_hash("adminpassword")  # Set a default password
+            new_admin = User(username=admin_email, password=hashed_password, role="Admin")
+            db.session.add(new_admin)
+    db.session.commit()
+
+
+# -------------------- Routes --------------------
 
 # Home Page
 @app.route('/')
@@ -59,23 +72,22 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(username=email).first()
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             session['role'] = user.role
-            flash('Login successful!', 'success')
 
-            if user.role == 'Admin':
+            if user.role == "Admin":
                 return redirect(url_for('admin_dashboard'))
-            elif user.role == 'Teacher':
+            elif user.role == "Teacher":
                 return redirect(url_for('teacher_dashboard'))
-            elif user.role == 'Student':
+            elif user.role == "Student":
                 return redirect(url_for('student_dashboard'))
-        else:
-            flash('Invalid username or password', 'danger')
+
+        flash('Invalid credentials, try again!', 'danger')
 
     return render_template('login.html')
 
@@ -88,12 +100,14 @@ def logout():
     return redirect(url_for('home'))
 
 
-# Admin Dashboard
+# -------------------- Admin Routes --------------------
+
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if 'user_id' not in session or session['role'] != 'Admin':
         flash('Unauthorized access!', 'danger')
         return redirect(url_for('login'))
+
     users = User.query.all()
     courses = Course.query.all()
     classes = Class.query.all()
@@ -150,7 +164,8 @@ def add_class():
     return redirect(url_for('admin_dashboard'))
 
 
-# Teacher Dashboard
+# -------------------- Teacher Routes --------------------
+
 @app.route('/teacher/dashboard')
 def teacher_dashboard():
     if 'user_id' not in session or session['role'] != 'Teacher':
@@ -180,7 +195,8 @@ def mark_attendance():
     return redirect(url_for('teacher_dashboard'))
 
 
-# Student Dashboard
+# -------------------- Student Routes --------------------
+
 @app.route('/student/dashboard')
 def student_dashboard():
     if 'user_id' not in session or session['role'] != 'Student':
@@ -192,6 +208,6 @@ def student_dashboard():
     return render_template('student_dashboard.html', attendance_records=attendance_records)
 
 
-# Run the Flask App
+# -------------------- Run Flask App --------------------
 if __name__ == '__main__':
     app.run(debug=True)
