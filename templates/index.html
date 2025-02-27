@@ -1,13 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Home</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Monitoring & Attendance System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+            background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 30%, #e86aa7 70%, #d76585 100%);
+            position: relative;
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 1; }
+        }
+
+        .mountains {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25vh;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23240046' fill-opacity='0.8' d='M0,288L60,272C120,256,240,224,360,218.7C480,213,600,235,720,245.3C840,256,960,256,1080,240C1200,224,1320,192,1380,176L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z'%3E%3C/path%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23481a70' fill-opacity='0.6' d='M0,96L60,106.7C120,117,240,139,360,149.3C480,160,600,160,720,138.7C840,117,960,75,1080,69.3C1200,64,1320,96,1380,112L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        .moon {
+            position: absolute;
+            top: 15%;
+            right: 15%;
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 30px 5px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+            animation: glow 8s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 30px 5px rgba(255, 255, 255, 0.7); }
+            100% { box-shadow: 0 0 50px 10px rgba(255, 255, 255, 0.9); }
+        }
+
+        .trees {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30vh;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .tree {
+            position: absolute;
+            bottom: 15vh;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid #2c0a4a;
+        }
+
+        .tree:nth-child(1) {
+            left: 5%;
+            transform: scale(1.5);
+        }
+
+        .tree:nth-child(2) {
+            left: 10%;
+            transform: scale(1.2);
+        }
+
+        .tree:nth-child(3) {
+            left: 15%;
+            transform: scale(0.8);
+        }
+
+        .tree:nth-child(4) {
+            right: 5%;
+            transform: scale(1.5);
+        }
+
+        .tree:nth-child(5) {
+            right: 10%;
+            transform: scale(1.2);
+        }
+
+        .tree:nth-child(6) {
+            right: 15%;
+            transform: scale(0.8);
+        }
+
+        .header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            padding: 50px 5%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            max-width: 700px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 30px;
+            background-color: white;
+            color: #5c3f8c;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button i {
+            margin-left: 10px;
+        }
+
+        .feature-badges {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .badge i {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .moon {
+                width: 80px;
+                height: 80px;
+                top: 10%;
+                right: 10%;
+            }
+
+            .content {
+                padding: 40px 5%;
+            }
+
+            .feature-badges {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .moon {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Attendance Management System</h1>
-        <a href="{{ url_for('login') }}">Login</a>
+    <!-- Stars background -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Moon element -->
+    <div class="moon"></div>
+
+    <!-- Mountain silhouettes -->
+    <div class="mountains"></div>
+
+    <!-- Trees silhouettes -->
+    <div class="trees">
+        <div class="tree"></div>
+        <div class="tree"></div>
+        <div class="tree"></div>
+        <div class="tree"></div>
+        <div class="tree"></div>
+        <div class="tree"></div>
     </div>
+
+    <!-- Header with navigation -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-user-graduate"></i>
+            <span>EduTrack</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Features</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main class="content">
+        <h1>Student Monitoring & Attendance System</h1>
+
+        <div class="feature-badges">
+            <div class="badge"><i class="fas fa-chart-line"></i> Real-time Tracking</div>
+            <div class="badge"><i class="fas fa-bell"></i> Absence Alerts</div>
+            <div class="badge"><i class="fas fa-file-alt"></i> Reports</div>
+        </div>
+
+        <p>Simplify your classroom attendance tracking and student monitoring with our powerful system. Track student attendance, monitor academic progress, and generate insightful reports to improve learning outcomes.</p>
+
+        <a href="{{ url_for('login') }}" class="cta-button">
+            Login to System
+            <i class="fas fa-sign-in-alt"></i>
+        </a>
+    </main>
+
+    <script>
+        // Create stars randomly on the page
+        document.addEventListener('DOMContentLoaded', function() {
+            const starsContainer = document.getElementById('stars');
+            const starsCount = 100;
+
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                // Random size between 1px and 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+
+                // Random position
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 80;
+                star.style.left = `${posX}%`;
+                star.style.top = `${posY}%`;
+
+                // Random animation delay
+                star.style.animationDelay = `${Math.random() * 4}s`;
+
+                starsContainer.appendChild(star);
+            }
+        });
+    </script>
 </body>
 </html>
