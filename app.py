@@ -142,6 +142,32 @@ def manage_courses():
 
     courses = Course.query.all()
     return render_template('manage_courses.html', courses=courses)
+#---- manage users-----#
+@app.route('/manage_users', methods=['GET', 'POST'])
+def manage_users():
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role = request.form.get('role')
+
+        if username and password and role:
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                flash("User already exists!", "warning")
+            else:
+                new_user = User(username=username, password=generate_password_hash(password), role=role)
+                db.session.add(new_user)
+                db.session.commit()
+                flash("User added successfully!", "success")
+        else:
+            flash("All fields are required!", "danger")
+
+    users = User.query.all()
+    return render_template('manage_users.html', users=users)
 
 # ---- CLASS MANAGEMENT ---- #
 @app.route('/add_class', methods=['POST'])
