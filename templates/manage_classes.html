@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Manage Classes</h2>
+
+    <!-- Add Class Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Add New Class</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="class_name">Class Name</label>
+                    <input type="text" class="form-control" id="class_name" name="class_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input type="text" class="form-control" id="year" name="year" required>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Add Class</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Classes List -->
+    <div class="card">
+        <div class="card-header">
+            <h4>Existing Classes</h4>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for class in classes %}
+                    <tr>
+                        <td>{{ class.id }}</td>
+                        <td>{{ class.name }}</td>
+                        <td>{{ class.year }}</td>
+                        <td>
+                            <a href="{{ url_for('delete_class', class_id=class.id) }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Are you sure you want to delete this class?')">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

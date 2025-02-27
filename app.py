@@ -182,18 +182,46 @@ def manage_users():
     return render_template('manage_users.html', users=users)
 
 # ---- CLASS MANAGEMENT ---- #
-@app.route('/add_class', methods=['POST'])
+@app.route('/manage_classes', methods=['GET', 'POST'])
+def manage_classes():
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        name = request.form.get('class_name')
+        year = request.form.get('year')
+
+        if name and year:
+            existing_class = Class.query.filter_by(name=name, year=year).first()
+            if existing_class:
+                flash("Class already exists!", "warning")
+            else:
+                new_class = Class(name=name, year=year)
+                db.session.add(new_class)
+                db.session.commit()
+                flash("Class added successfully!", "success")
+        else:
+            flash("All fields are required!", "danger")
+
+    classes = Class.query.all()
+    return render_template('manage_classes.html', classes=classes)
+
+@app.route('/add_class', methods=['GET', 'POST'])
 def add_class():
     if 'user_id' in session and session['role'] == 'admin':
-        name = request.form['name']
-        year = request.form['year']
+        if request.method == 'POST':
+            name = request.form['name']
+            year = request.form['year']
 
-        new_class = Class(name=name, year=year)
-        db.session.add(new_class)
-        db.session.commit()
-        flash("Class added successfully!", "success")
-        return redirect(url_for('admin_dashboard'))
+            new_class = Class(name=name, year=year)
+            db.session.add(new_class)
+            db.session.commit()
+            flash("Class added successfully!", "success")
+            return redirect(url_for('admin_dashboard'))
+        return render_template('add_class.html')  # Render form on GET request
     return "Unauthorized Access"
+
 
 
 @app.route('/delete_class/<int:class_id>')

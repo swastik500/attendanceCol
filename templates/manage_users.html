@@ -4,21 +4,354 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #3b82f6;
+            --secondary-color: #f8fafc;
+            --accent-color: #10b981;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --danger-color: #ef4444;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-light));
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar ul li a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        /* Main Content */
+        .container {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            max-width: calc(100vw - var(--sidebar-width));
+        }
+
+        .content-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Headers */
+        h1 {
+            font-size: 2rem;
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        tr:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Role Badges */
+        .role-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .role-badge.admin {
+            background: var(--primary-light);
+            color: white;
+        }
+
+        .role-badge.teacher {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .role-badge.student {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        /* Search */
+        .search-container {
+            position: relative;
+            max-width: 300px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            .container {
+                margin-left: 220px;
+                max-width: calc(100vw - 220px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .container {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 1rem;
+            }
+            .show-sidebar .sidebar {
+                transform: translateX(0);
+            }
+            .content-wrapper {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            display: none;
+            padding: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Users List</h2>
-    <table border="1">
-        <tr>
-            <th>Username</th>
-            <th>Role</th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.username }}</td>
-            <td>{{ user.role }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="sidebar">
+        <h2><i class="fas fa-university"></i> Admin Panel</h2>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register User</a></li>
+                <li><a href="{{ url_for('manage_courses') }}"><i class="fas fa-book"></i> Manage Courses</a></li>
+                <li><a href="{{ url_for('add_class') }}"><i class="fas fa-chalkboard"></i> Manage Classes</a></li>
+                <li><a href="{{ url_for('manage_users') }}"><i class="fas fa-users"></i> View Users</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="content-wrapper">
+            <h1><i class="fas fa-users"></i> Manage Users</h1>
+
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="userSearch" placeholder="Search users...">
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Username</th>
+                            <th><i class="fas fa-user-tag"></i> Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <i class="fas fa-user-circle"></i>
+                                {{ user.username }}
+                            </td>
+                            <td>
+                                <span class="role-badge {{ user.role.lower() }}">
+                                    {{ user.role }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('userSearch').addEventListener('keyup', function() {
+                const searchQuery = this.value.toLowerCase();
+                const rows = document.getElementById('userTableBody').getElementsByTagName('tr');
+
+                for (let row of rows) {
+                    const username = row.cells[0].textContent.toLowerCase();
+                    const role = row.cells[1].textContent.toLowerCase();
+
+                    if (username.includes(searchQuery) || role.includes(searchQuery)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+
+            // Add mobile menu toggle functionality
+            const body = document.body;
+            const menuToggle = document.createElement('button');
+            menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            menuToggle.classList.add('menu-toggle');
+
+            body.appendChild(menuToggle);
+
+            menuToggle.addEventListener('click', function() {
+                body.classList.toggle('show-sidebar');
+            });
+
+            // Show/hide menu toggle based on screen size
+            function handleResize() {
+                menuToggle.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial check
+        });
+    </script>
 </body>
 </html>
