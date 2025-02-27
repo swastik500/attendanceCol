@@ -85,20 +85,32 @@ def admin_dashboard():
     return redirect(url_for('login'))
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if 'user_id' in session and session['role'] == 'admin':
-        username = request.form['username']
-        password = request.form['password']
-        role = request.form['role']
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
 
-        hashed_password = generate_password_hash(password)  # Ensure password is hashed
-        new_user = User(username=username, password=hashed_password, role=role)
-        db.session.add(new_user)
-        db.session.commit()
-        flash(f"{role} registered successfully!", "success")
-        return redirect(url_for('admin_dashboard'))
-    return "Unauthorized Access"
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role = request.form.get('role')
+
+        if username and password and role:
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                flash("User already exists!", "warning")
+            else:
+                hashed_password = generate_password_hash(password)
+                new_user = User(username=username, password=hashed_password, role=role)
+                db.session.add(new_user)
+                db.session.commit()
+                flash("User registered successfully!", "success")
+        else:
+            flash("All fields are required!", "danger")
+
+    users = User.query.all()
+    return render_template('register.html', users=users)
 
 
 @app.route('/delete_user/<int:user_id>', methods=['GET'])

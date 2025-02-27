@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register User</title>
+    <title>Add Class</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Register New User</h1>
+    <h1>Add New Class</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -18,26 +18,26 @@
     {% endwith %}
 
     <form method="POST">
-        <input type="text" name="username" placeholder="Enter Username" required>
-        <input type="password" name="password" placeholder="Enter Password" required>
-        <select name="role">
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
+        <input type="text" name="class_name" placeholder="Enter Class Name" required>
+        <select name="course_id">
+            <option value="">Select Course</option>
+            {% for course in courses %}
+            <option value="{{ course.id }}">{{ course.name }}</option>
+            {% endfor %}
         </select>
-        <button type="submit">Register</button>
+        <button type="submit">Add Class</button>
     </form>
 
-    <h2>Registered Users</h2>
+    <h2>Existing Classes</h2>
     <table border="1">
         <tr>
-            <th>Username</th>
-            <th>Role</th>
+            <th>Class Name</th>
+            <th>Course</th>
         </tr>
-        {% for user in users %}
+        {% for class in classes %}
         <tr>
-            <td>{{ user.username }}</td>
-            <td>{{ user.role }}</td>
+            <td>{{ class.name }}</td>
+            <td>{{ class.course.name }}</td>
         </tr>
         {% endfor %}
     </table>
