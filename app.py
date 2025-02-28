@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date, datetime
+import csv
+import io
 from config import Config
 from models import db, User, Class, Subject, Attendance, Course, LectureSchedule
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -450,18 +452,20 @@ def teacher_dashboard():
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
     if 'user_id' in session and session['role'] == 'teacher':
-        student_id = int(request.form['student_id'])
         subject_id = int(request.form['subject_id'])
-        status = request.form['status']
-
-        if not status in ['Present', 'Absent']:
-            flash("Invalid attendance status", "danger")
-            return redirect(url_for('teacher_dashboard'))
-
-        attendance = Attendance(student_id=student_id, subject_id=subject_id, date=date.today(), status=status)
-        db.session.add(attendance)
+        student_ids = request.form.getlist('student_ids[]')
+        for student_id in student_ids:
+            status = request.form.get(f'status_{student_id}')
+            if status in ['Present', 'Absent']:
+                attendance = Attendance(
+                    student_id=int(student_id),
+                    subject_id=subject_id,
+                    date=date.today(),
+                    status=status
+                )
+                db.session.add(attendance)
         db.session.commit()
-        flash("Attendance marked!", "success")
+        flash("Attendance marked successfully!", "success")
         return redirect(url_for('teacher_dashboard'))
     return "Unauthorized Access"
 
@@ -480,6 +484,43 @@ def student_dashboard():
         return render_template('student_dashboard.html', attendance=attendance_records, percentage=attendance_percentage)
     return redirect(url_for('login'))
 
+
+@app.route('/download_attendance_csv')
+def download_attendance_csv():
+    if 'user_id' not in session or session['role'] != 'teacher':
+        flash('Unauthorized Access!', 'error')
+        return redirect(url_for('login'))
+
+    # Create a string buffer to write CSV data
+    si = io.StringIO()
+    cw = csv.writer(si)
+
+    # Write headers
+    cw.writerow(['Subject', 'Student', 'Date', 'Status'])
+
+    # Get attendance records for subjects taught by this teacher
+    subjects = Subject.query.filter_by(teacher_id=session['user_id']).all()
+    subject_ids = [subject.id for subject in subjects]
+    attendance_records = Attendance.query.filter(Attendance.subject_id.in_(subject_ids)).all()
+
+    # Write attendance data
+    for record in attendance_records:
+        cw.writerow([
+            record.subject.name,
+            record.student.username,
+            record.date.strftime('%Y-%m-%d'),
+            record.status
+        ])
+
+    output = si.getvalue()
+    si.close()
+
+    # Create the response with CSV data
+    response = app.make_response(output)
+    response.headers['Content-Disposition'] = 'attachment; filename=attendance_records.csv'
+    response.headers['Content-type'] = 'text/csv'
+
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -188,28 +188,51 @@
                         <option value="{{ subject.id }}">{{ subject.name }}</option>
                     {% endfor %}
                 </select>
-
-                <label for="student">Student</label>
-                <select name="student_id" id="student" required>
-                    <option value="" disabled selected>Select Student</option>
-                    {% for student in students %}
-                        <option value="{{ student.id }}">{{ student.username }}</option>
-                    {% endfor %}
-                </select>
-
-                <label for="status">Attendance Status</label>
-                <select name="status" id="status" required>
-                    <option value="Present">Present</option>
-                    <option value="Absent">Absent</option>
-                </select>
-
+        
+                <div class="student-list">
+                    <h4>Students</h4>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Attendance Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    {{ student.username }}
+                                </td>
+                                <td>
+                                    <input type="hidden" name="student_ids[]" value="{{ student.id }}">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="status_{{ student.id }}" value="Present" id="present_{{ student.id }}" required>
+                                        <label class="form-check-label" for="present_{{ student.id }}">Present</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="status_{{ student.id }}" value="Absent" id="absent_{{ student.id }}" required>
+                                        <label class="form-check-label" for="absent_{{ student.id }}">Absent</label>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+        
                 <button type="submit">Mark Attendance</button>
             </form>
         </div>
 
         <!-- Attendance Records -->
         <div class="attendance-records">
-            <h3>Attendance Records</h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Attendance Records</h3>
+                <a href="{{ url_for('download_attendance_csv') }}" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Download CSV
+                </a>
+            </div>
             <table>
                 <tr>
                     <th>Subject</th>
@@ -227,7 +250,6 @@
                 {% endfor %}
             </table>
         </div>
-
         <a href="{{ url_for('teacher_dashboard') }}" class="back-link">Back to Dashboard</a>
     </div>
     <script>

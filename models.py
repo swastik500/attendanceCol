@@ -53,6 +53,7 @@ class Attendance(db.Model):
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(10), nullable=False)
     subject = db.relationship('Subject', backref='attendances', lazy=True)
+    student = db.relationship('User', backref='attendances', lazy=True)
     __table_args__ = (
         CheckConstraint(status.in_(['Present', 'Absent']), name='valid_status'),
         CheckConstraint(date <= func.current_date(), name='valid_date'),
