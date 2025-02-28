@@ -246,7 +246,62 @@ def add_class():
         return render_template('add_class.html', courses=courses, classes=classes)
     return "Unauthorized Access"
 
+@app.route('/manage_course_assignments', methods=['GET'])
+def manage_course_assignments():
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
 
+    students = User.query.filter_by(role='student').all()
+    courses = Course.query.all()
+    return render_template('manage_course_assignments.html', students=students, courses=courses)
+
+@app.route('/assign_course', methods=['POST'])
+def assign_course():
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    student_id = request.form.get('student_id')
+    course_id = request.form.get('course_id')
+
+    if not student_id or not course_id:
+        flash("Both student and course must be selected!", "danger")
+        return redirect(url_for('manage_course_assignments'))
+
+    student = User.query.get(student_id)
+    course = Course.query.get(course_id)
+
+    if not student or not course:
+        flash("Invalid student or course selected!", "danger")
+        return redirect(url_for('manage_course_assignments'))
+
+    if course in student.enrolled_courses:
+        flash("Student is already enrolled in this course!", "warning")
+    else:
+        student.enrolled_courses.append(course)
+        db.session.commit()
+        flash("Course assigned successfully!", "success")
+
+    return redirect(url_for('manage_course_assignments'))
+
+@app.route('/unassign_course/<int:student_id>/<int:course_id>')
+def unassign_course(student_id, course_id):
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    student = User.query.get(student_id)
+    course = Course.query.get(course_id)
+
+    if student and course and course in student.enrolled_courses:
+        student.enrolled_courses.remove(course)
+        db.session.commit()
+        flash("Course unassigned successfully!", "success")
+    else:
+        flash("Invalid student or course!", "danger")
+
+    return redirect(url_for('manage_course_assignments'))
 
 @app.route('/delete_class/<int:class_id>')
 def delete_class(class_id):
@@ -275,6 +330,22 @@ def add_subject():
         return redirect(url_for('admin_dashboard'))
     return "Unauthorized Access"
 
+
+@app.route('/delete_subject/<int:subject_id>')
+def delete_subject(subject_id):
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    subject = Subject.query.get(subject_id)
+    if subject:
+        db.session.delete(subject)
+        db.session.commit()
+        flash("Subject deleted successfully!", "success")
+    else:
+        flash("Subject not found!", "danger")
+
+    return redirect(url_for('manage_subjects'))
 
 @app.route('/manage_subjects', methods=['GET', 'POST'])
 def manage_subjects():

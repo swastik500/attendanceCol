@@ -4,11 +4,18 @@ from datetime import date
 
 db = SQLAlchemy()
 
+student_courses = db.Table('student_courses',
+    db.Column('student_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('course_id', db.Integer, db.ForeignKey('course.id', ondelete='CASCADE'), primary_key=True)
+)
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(10), nullable=False)
+    enrolled_courses = db.relationship('Course', secondary=student_courses, lazy='subquery',
+        backref=db.backref('enrolled_students', lazy=True))
     __table_args__ = (
         CheckConstraint(role.in_(['admin', 'teacher', 'student']), name='valid_role'),
     )
