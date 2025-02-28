@@ -7,12 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Reusing the same styles as admin_dashboard.html */
         :root {
-            --primary-color: #2563eb;
-            --primary-light: #3b82f6;
+            --primary-color: #5c3f8c;
+            --primary-light: #8052c8;
             --secondary-color: #f8fafc;
-            --accent-color: #10b981;
+            --accent-color: #e86aa7;
             --text-color: #1e293b;
             --border-color: #e2e8f0;
             --danger-color: #ef4444;
@@ -28,15 +27,117 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
             background-color: var(--secondary-color);
             color: var(--text-color);
             line-height: 1.6;
         }
 
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 30%, #e86aa7 70%, #d76585 100%);
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .sidebar-star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 1; }
+        }
+
+        .sidebar-moon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+            animation: glow 8s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.7); }
+            100% { box-shadow: 0 0 25px 5px rgba(255, 255, 255, 0.9); }
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar ul li a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        /* Main Content */
         .container {
             margin-left: var(--sidebar-width);
             padding: 2rem;
@@ -51,9 +152,9 @@
             margin-bottom: 2rem;
         }
 
-        h1 {
-            font-size: 2rem;
-            color: var(--text-color);
+        /* Headers */
+        h1, h2 {
+            color: var(--primary-color);
             margin-bottom: 1.5rem;
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 0.75rem;
@@ -62,6 +163,15 @@
             gap: 0.75rem;
         }
 
+        h1 {
+            font-size: 2rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        /* Forms */
         form {
             margin-bottom: 2rem;
             background: white;
@@ -93,8 +203,14 @@
             font-family: 'Poppins', sans-serif;
         }
 
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(92, 63, 140, 0.1);
+        }
+
         button {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 100%);
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
@@ -108,10 +224,11 @@
         }
 
         button:hover {
-            background: var(--primary-light);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(128, 82, 200, 0.3);
         }
 
+        /* Table Styles */
         .table-container {
             overflow-x: auto;
             margin: 1.5rem 0;
@@ -127,39 +244,140 @@
         }
 
         th {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 100%);
             color: white;
             font-weight: 500;
             text-align: left;
             padding: 1rem;
+            font-size: 0.95rem;
         }
 
         td {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
         }
 
+        tr:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Delete Link */
+        .delete-link {
+            color: var(--danger-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-link:hover {
+            color: var(--primary-color);
+            transform: translateX(2px);
+        }
+
+        /* Flash Messages */
         .alert {
             padding: 1rem;
             margin-bottom: 1.5rem;
             border-radius: 8px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .success {
+        .alert-success {
             background-color: rgba(16, 185, 129, 0.1);
             color: var(--success-color);
             border: 1px solid var(--success-color);
         }
 
-        .error {
+        .alert-error, .alert-danger {
             background-color: rgba(239, 68, 68, 0.1);
             color: var(--danger-color);
             border: 1px solid var(--danger-color);
         }
+
+        .alert-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            .container {
+                margin-left: 220px;
+                max-width: calc(100vw - 220px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .container {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 1rem;
+            }
+            .show-sidebar .sidebar {
+                transform: translateX(0);
+            }
+            .content-wrapper {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            display: none;
+            padding: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
+    <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+
+    <div class="sidebar">
+        <div class="sidebar-background" id="sidebar-stars"></div>
+        <div class="sidebar-moon"></div>
+
+        <h2><i class="fas fa-university"></i> Admin Panel</h2>
+        <nav>
+            <ul>
+                <li><a href="/admin_dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="/register"><i class="fas fa-user-plus"></i> Register User</a></li>
+                <li><a href="/manage_courses"><i class="fas fa-book"></i> Manage Courses</a></li>
+                <li><a href="/add_class"><i class="fas fa-chalkboard"></i> Manage Classes</a></li>
+                <li><a href="/manage_users"><i class="fas fa-users"></i> View Users</a></li>
+                <li><a href="/manage_subjects"><i class="fas fa-book-open"></i> Manage Subjects</a></li>
+                <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+
     <div class="container">
         <div class="content-wrapper">
             <h1><i class="fas fa-book"></i> Manage Subjects</h1>
@@ -167,10 +385,10 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert {{ category }}">
+                        <div class="alert alert-{{ category }}">
                             {% if category == 'success' %}
                                 <i class="fas fa-check-circle"></i>
-                            {% elif category == 'error' %}
+                            {% elif category == 'error' or category == 'danger' %}
                                 <i class="fas fa-exclamation-circle"></i>
                             {% endif %}
                             {{ message }}
@@ -237,5 +455,50 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle functionality
+            const body = document.body;
+            const menuToggle = document.querySelector('.menu-toggle');
+
+            menuToggle.addEventListener('click', function() {
+                body.classList.toggle('show-sidebar');
+            });
+
+            // Show/hide menu toggle based on screen size
+            function handleResize() {
+                menuToggle.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial check
+
+            // Create stars randomly in the sidebar
+            const sidebarStars = document.getElementById('sidebar-stars');
+            const starsCount = 50;
+
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'sidebar-star';
+
+                // Random size between 1px and 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+
+                // Random position
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                star.style.left = `${posX}%`;
+                star.style.top = `${posY}%`;
+
+                // Random animation delay
+                star.style.animationDelay = `${Math.random() * 4}s`;
+
+                sidebarStars.appendChild(star);
+            }
+        });
+    </script>
 </body>
 </html>

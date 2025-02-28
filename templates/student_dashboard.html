@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -71,19 +72,81 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            max-width: 1000px;
-            margin: 20px auto;
+            max-width: 1200px;
+            margin: 20px auto 20px 270px;
         }
 
         h1, h2 {
             color: var(--primary-color);
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .schedule-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            .container {
+                margin-left: 220px;
+                max-width: calc(100vw - 220px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .container {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 1rem;
+            }
+            .show-sidebar .sidebar {
+                transform: translateX(0);
+            }
+            .content-wrapper {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            display: none;
+            padding: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
         }
 
         th, td {
@@ -95,56 +158,161 @@
         th {
             background: var(--primary-color);
             color: white;
+            font-weight: 500;
         }
 
-        .percentage {
-            color: var(--accent-color);
-            font-weight: bold;
+        tr:hover {
+            background-color: var(--secondary-color);
         }
 
-        a.back-link {
+        .schedule-day {
+            font-weight: 500;
             color: var(--primary-color);
-            text-decoration: none;
-            margin-top: 20px;
-            display: inline-block;
+        }
+
+        .schedule-time {
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .schedule-subject {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .schedule-location {
+            color: var(--text-color);
+            font-style: italic;
+        }
+
+        .no-schedules {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-color);
+            font-style: italic;
         }
     </style>
 </head>
 <body>
+    <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+
     <div class="sidebar">
-        <h2>Student Panel</h2>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
-        </nav>
+        <div class="sidebar-background" id="sidebar-stars"></div>
+        <div class="sidebar-moon"></div>
+        <h2><i class="fas fa-user-graduate"></i> Student Panel</h2>
+        <ul>
+            <li><a href="{{ url_for('student_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('mark_attendance') }}"><i class="fas fa-calendar-check"></i> View Attendance</a></li>
+            <li><a href="{{ url_for('my_courses') }}"><i class="fas fa-book-reader"></i> My Courses</a></li>
+            <li><a href="{{ url_for('view_schedule') }}"><i class="fas fa-calendar-alt"></i> Class Schedule</a></li>
+            <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
     </div>
 
     <div class="container">
-        <h1>Welcome, {{ session['username'] }}!</h1>
-        <h2>Your Attendance</h2>
+        <h1><i class="fas fa-user-graduate"></i> Welcome, {{ current_user.username }}!</h1>
 
-        <p>Here is your attendance record and percentage:</p>
+        {% if schedules is defined %}
+        <div class="schedule-container">
+            <h2><i class="fas fa-book-reader"></i> My Enrolled Courses</h2>
+            {% if courses %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course Name</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td class="schedule-subject">{{ course.name }}</td>
+                        <td>{{ course.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-schedules">
+                <p>You are not enrolled in any courses yet.</p>
+            </div>
+            {% endif %}
+        </div>
 
-        <table>
-            <tr>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Status</th>
-            </tr>
-            {% for record in attendance %}
-            <tr>
-                <td>{{ record.subject.name }}</td>
-                <td>{{ record.date }}</td>
-                <td>{{ record.status }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <h3>Attendance Percentage: <span class="percentage">{{ percentage }}%</span></h3>
-
-        <a href="{{ url_for('student_dashboard') }}" class="back-link">Back to Dashboard</a>
+        <div class="schedule-container">
+            <h2><i class="fas fa-calendar-alt"></i> My Lecture Schedule</h2>
+            {% if schedules %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Subject</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedules %}
+                    <tr>
+                        <td class="schedule-day">{{ schedule.day }}</td>
+                        <td class="schedule-time">{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                        <td class="schedule-subject">{{ schedule.subject.name }}</td>
+                        <td class="schedule-location">{{ schedule.location }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-schedules">
+                <p>No scheduled lectures found for your assigned subjects.</p>
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add mobile menu toggle functionality
+            const body = document.body;
+            const menuToggle = document.querySelector('.menu-toggle');
+
+            menuToggle.addEventListener('click', function() {
+                body.classList.toggle('show-sidebar');
+            });
+
+            // Show/hide menu toggle based on screen size
+            function handleResize() {
+                menuToggle.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial check
+
+            // Create stars randomly in the sidebar
+            const sidebarStars = document.getElementById('sidebar-stars');
+            const starsCount = 50;
+
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'sidebar-star';
+
+                // Random size between 1px and 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+
+                // Random position
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                star.style.left = `${posX}%`;
+                star.style.top = `${posY}%`;
+
+                // Random animation delay
+                star.style.animationDelay = `${Math.random() * 4}s`;
+
+                sidebarStars.appendChild(star);
+            }
+        });
+    </script>
 </body>
 </html>

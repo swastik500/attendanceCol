@@ -449,7 +449,7 @@ def teacher_dashboard():
     return redirect(url_for('login'))
 
 
-@app.route('/mark_attendance', methods=['POST'])
+@app.route('/mark_attendance', methods=['GET', 'POST'])
 def mark_attendance():
     if 'user_id' in session and session['role'] == 'teacher':
         subject_id = int(request.form['subject_id'])
@@ -475,15 +475,44 @@ def mark_attendance():
 def student_dashboard():
     if 'user_id' in session and session['role'] == 'student':
         student_id = session['user_id']
+        user = User.query.get(student_id)
         attendance_records = Attendance.query.filter_by(student_id=student_id).all()
 
         total_classes = len(attendance_records)
         present_count = sum(1 for record in attendance_records if record.status == 'Present')
         attendance_percentage = (present_count / total_classes * 100) if total_classes > 0 else 0
 
-        return render_template('student_dashboard.html', attendance=attendance_records, percentage=attendance_percentage)
+        return render_template('student_dashboard.html', attendance=attendance_records, percentage=attendance_percentage, current_user=user)
     return redirect(url_for('login'))
 
+@app.route('/my_courses')
+def my_courses():
+    if 'user_id' in session and session['role'] == 'student':
+        student_id = session['user_id']
+        user = User.query.get(student_id)
+        return render_template('student_dashboard.html', current_user=user, courses=user.enrolled_courses)
+    return redirect(url_for('login'))
+
+@app.route('/view_schedule')
+def view_schedule():
+    if 'user_id' in session and session['role'] == 'student':
+        student_id = session['user_id']
+        user = User.query.get(student_id)
+        
+        # Get all classes associated with the student's courses
+        student_classes = set()
+        for course in user.enrolled_courses:
+            classes = Class.query.filter_by(course_id=course.id).all()
+            student_classes.update(classes)
+        
+        # Get schedules for these classes
+        schedules = []
+        for class_ in student_classes:
+            class_schedules = LectureSchedule.query.filter_by(class_id=class_.id).all()
+            schedules.extend(class_schedules)
+        
+        return render_template('student_dashboard.html', current_user=user, schedules=schedules)
+    return redirect(url_for('login'))
 
 @app.route('/download_attendance_csv')
 def download_attendance_csv():
