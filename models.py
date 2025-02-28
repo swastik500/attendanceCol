@@ -45,8 +45,25 @@ class Attendance(db.Model):
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id', ondelete='CASCADE'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(10), nullable=False)
+    subject = db.relationship('Subject', backref='attendances', lazy=True)
     __table_args__ = (
         CheckConstraint(status.in_(['Present', 'Absent']), name='valid_status'),
         CheckConstraint(date <= func.current_date(), name='valid_date'),
         UniqueConstraint('student_id', 'subject_id', 'date', name='unique_attendance_record'),
+    )
+
+class LectureSchedule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id', ondelete='CASCADE'), nullable=False)
+    class_id = db.Column(db.Integer, db.ForeignKey('class.id', ondelete='CASCADE'), nullable=False)
+    day_of_week = db.Column(db.String(10), nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    
+    subject = db.relationship('Subject', backref='schedules')
+    class_rel = db.relationship('Class', backref='schedules')
+    
+    __table_args__ = (
+        CheckConstraint(day_of_week.in_(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']), name='valid_day'),
+        UniqueConstraint('subject_id', 'class_id', 'day_of_week', 'start_time', name='unique_lecture_schedule')
     )

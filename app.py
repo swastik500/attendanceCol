@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import date
+from datetime import date, datetime
 from config import Config
-from models import db, User, Class, Subject, Attendance, Course
+from models import db, User, Class, Subject, Attendance, Course, LectureSchedule
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import and_, or_
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -298,17 +299,71 @@ def manage_subjects():
     classes = Class.query.all()
     teachers = User.query.filter_by(role='teacher').all()
     return render_template('manage_subjects.html', subjects=subjects, classes=classes, teachers=teachers)
+@app.route('/manage_schedules', methods=['GET', 'POST'])
+def manage_schedules():
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
 
-@app.route('/delete_subject/<int:subject_id>')
-def delete_subject(subject_id):
-    if 'user_id' in session and session['role'] == 'admin':
-        subject = Subject.query.get(subject_id)
-        if subject:
-            db.session.delete(subject)
-            db.session.commit()
-            flash("Subject deleted!", "success")
-        return redirect(url_for('manage_subjects'))
-    return "Unauthorized Access"
+    if request.method == 'POST':
+        subject_id = request.form.get('subject_id')
+        class_id = request.form.get('class_id')
+        day_of_week = request.form.get('day_of_week')
+        start_time = request.form.get('start_time')
+        end_time = request.form.get('end_time')
+
+        if subject_id and class_id and day_of_week and start_time and end_time:
+            # Convert time strings to Time objects
+            start_time = datetime.strptime(start_time, '%H:%M').time()
+            end_time = datetime.strptime(end_time, '%H:%M').time()
+
+            # Check for time conflicts
+            existing_schedule = LectureSchedule.query.filter_by(
+                class_id=class_id,
+                day_of_week=day_of_week
+            ).filter(
+                or_(
+                    and_(LectureSchedule.start_time <= start_time, LectureSchedule.end_time > start_time),
+                    and_(LectureSchedule.start_time < end_time, LectureSchedule.end_time >= end_time)
+                )
+            ).first()
+
+            if existing_schedule:
+                flash("Time slot conflicts with an existing schedule!", "warning")
+            else:
+                new_schedule = LectureSchedule(
+                    subject_id=subject_id,
+                    class_id=class_id,
+                    day_of_week=day_of_week,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+                db.session.add(new_schedule)
+                db.session.commit()
+                flash("Schedule added successfully!", "success")
+        else:
+            flash("All fields are required!", "danger")
+
+    subjects = Subject.query.all()
+    classes = Class.query.all()
+    schedules = LectureSchedule.query.all()
+    return render_template('manage_schedules.html', subjects=subjects, classes=classes, schedules=schedules)
+
+@app.route('/delete_schedule/<int:schedule_id>')
+def delete_schedule(schedule_id):
+    if 'role' not in session or session['role'] != 'admin':
+        flash("Unauthorized Access!", "danger")
+        return redirect(url_for('login'))
+
+    schedule = LectureSchedule.query.get(schedule_id)
+    if schedule:
+        db.session.delete(schedule)
+        db.session.commit()
+        flash("Schedule deleted successfully!", "success")
+    else:
+        flash("Schedule not found!", "danger")
+
+    return redirect(url_for('manage_schedules'))
 
 
 # ---- TEACHER DASHBOARD ---- #
