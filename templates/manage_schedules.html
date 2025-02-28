@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Reuse the same styles from admin_dashboard.html */
         :root {
             --primary-color: #5c3f8c;
             --primary-light: #8052c8;
@@ -18,6 +17,10 @@
             --danger-color: #ef4444;
             --success-color: #10b981;
             --warning-color: #f59e0b;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         * {
@@ -31,22 +34,141 @@
             background-color: var(--secondary-color);
             color: var(--text-color);
             line-height: 1.6;
-            padding: 2rem;
         }
 
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 30%, #e86aa7 70%, #d76585 100%);
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .sidebar-star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 1; }
+        }
+
+        .sidebar-moon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+            animation: glow 8s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.7); }
+            100% { box-shadow: 0 0 25px 5px rgba(255, 255, 255, 0.9); }
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar ul li a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        /* Main Content */
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            max-width: calc(100vw - var(--sidebar-width));
         }
 
         .content-wrapper {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
             padding: 2rem;
             margin-bottom: 2rem;
         }
 
+        /* Menu Toggle */
+        .menu-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            display: none;
+            padding: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Rest of the previous styles remain the same */
         h1 {
             font-size: 2rem;
             color: var(--primary-color);
@@ -63,7 +185,7 @@
             background: white;
             padding: 2rem;
             border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
         }
 
@@ -115,6 +237,9 @@
         .table-container {
             overflow-x: auto;
             margin-top: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
         }
 
         table {
@@ -133,6 +258,9 @@
             background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 100%);
             color: white;
             font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         tr:hover {
@@ -175,9 +303,60 @@
         .delete-link:hover {
             text-decoration: underline;
         }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            .container {
+                margin-left: 220px;
+                max-width: calc(100vw - 220px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .container {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 1rem;
+            }
+            .show-sidebar .sidebar {
+                transform: translateX(0);
+            }
+            .content-wrapper {
+                padding: 1.5rem;
+            }
+            .menu-toggle {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
+    <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+
+    <div class="sidebar">
+        <div class="sidebar-background" id="sidebar-stars"></div>
+        <div class="sidebar-moon"></div>
+
+        <h2><i class="fas fa-chalkboard-teacher"></i> Teacher Panel</h2>
+        <nav>
+            <ul>
+                 <li><a href="/admin_dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="/register"><i class="fas fa-user-plus"></i> Register User</a></li>
+                <li><a href="/manage_courses"><i class="fas fa-book"></i> Manage Courses</a></li>
+                <li><a href="/add_class"><i class="fas fa-chalkboard"></i> Manage Classes</a></li>
+                <li><a href="/manage_users"><i class="fas fa-users"></i> View Users</a></li>
+                <li><a href="/manage_subjects"><i class="fas fa-book-open"></i> Manage subjects</a></li>
+                <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+
     <div class="container">
         <div class="content-wrapper">
             <h1><i class="fas fa-clock"></i> Manage Lecture Schedules</h1>
@@ -268,7 +447,7 @@
                             <td>{{ schedule.start_time.strftime('%I:%M %p') }}</td>
                             <td>{{ schedule.end_time.strftime('%I:%M %p') }}</td>
                             <td>
-                                <a href="/delete_schedule/{{ schedule.id }}" class="delete-link" 
+                                <a href="/delete_schedule/{{ schedule.id }}" class="delete-link"
                                    onclick="return confirm('Are you sure you want to delete this schedule?');">
                                     <i class="fas fa-trash"></i> Delete
                                 </a>
@@ -280,5 +459,42 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add mobile menu toggle functionality
+            const body = document.body;
+            const menuToggle = document.querySelector('.menu-toggle');
+
+            menuToggle.addEventListener('click', function() {
+                body.classList.toggle('show-sidebar');
+            });
+
+            // Create stars randomly in the sidebar
+            const sidebarStars = document.getElementById('sidebar-stars');
+            const starsCount = 50;
+
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'sidebar-star';
+
+                // Random size between 1px and 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+
+                // Random position
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                star.style.left = `${posX}%`;
+                star.style.top = `${posY}%`;
+
+                // Random animation delay
+                star.style.animationDelay = `${Math.random() * 4}s`;
+
+                sidebarStars.appendChild(star);
+            }
+        });
+    </script>
 </body>
 </html>
