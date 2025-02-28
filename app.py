@@ -470,7 +470,7 @@ def mark_attendance():
             return redirect(url_for('teacher_dashboard'))
         elif session['role'] == 'student':
             student_id = session['user_id']
-            user = User.query.get(student_id)
+            user = db.session.get(User, student_id)
             attendance_records = Attendance.query.filter_by(student_id=student_id).all()
 
             total_classes = len(attendance_records)
@@ -486,25 +486,43 @@ def mark_attendance():
 
 
 # ---- STUDENT DASHBOARD ---- #
+@app.route('/view_attendance')
+def view_attendance():
+    if 'user_id' not in session or session['role'] != 'student':
+        flash('Unauthorized Access!', 'error')
+        return redirect(url_for('login'))
+    
+    student_id = session['user_id']
+    user = db.session.get(User, student_id)
+    attendance_records = Attendance.query.filter_by(student_id=student_id).all()
+
+    total_classes = len(attendance_records)
+    present_count = sum(1 for record in attendance_records if record.status == 'Present')
+    attendance_percentage = (present_count / total_classes * 100) if total_classes > 0 else 0
+
+    return render_template('student_dashboard.html', 
+                          attendance=attendance_records, 
+                          percentage=attendance_percentage, 
+                          current_user=user,
+                          show_attendance=True)
+
 @app.route('/student')
 def student_dashboard():
     if 'user_id' in session and session['role'] == 'student':
         student_id = session['user_id']
-        user = User.query.get(student_id)
+        user = db.session.get(User, student_id)
         attendance_records = Attendance.query.filter_by(student_id=student_id).all()
 
         total_classes = len(attendance_records)
         present_count = sum(1 for record in attendance_records if record.status == 'Present')
         attendance_percentage = (present_count / total_classes * 100) if total_classes > 0 else 0
-
         return render_template('student_dashboard.html', attendance=attendance_records, percentage=attendance_percentage, current_user=user)
     return redirect(url_for('login'))
-
 @app.route('/my_courses')
 def my_courses():
     if 'user_id' in session and session['role'] == 'student':
         student_id = session['user_id']
-        user = User.query.get(student_id)
+        user = db.session.get(User, student_id)
         return render_template('student_dashboard.html', current_user=user, courses=user.enrolled_courses)
     return redirect(url_for('login'))
 
@@ -512,7 +530,7 @@ def my_courses():
 def view_schedule():
     if 'user_id' in session and session['role'] == 'student':
         student_id = session['user_id']
-        user = User.query.get(student_id)
+        user = db.session.get(User, student_id)
         
         # Get all classes associated with the student's courses
         student_classes = set()
@@ -526,7 +544,12 @@ def view_schedule():
             class_schedules = LectureSchedule.query.filter_by(class_id=class_.id).all()
             schedules.extend(class_schedules)
         
-        return render_template('student_dashboard.html', current_user=user, schedules=schedules)
+        # Calculate attendance percentage
+        total_attendance = Attendance.query.filter_by(student_id=user.id).count()
+        present_attendance = Attendance.query.filter_by(student_id=user.id, status='Present').count()
+        percentage = (present_attendance / total_attendance * 100) if total_attendance > 0 else 0
+        
+        return render_template('student_dashboard.html', current_user=user, schedules=schedules, percentage=percentage)
     return redirect(url_for('login'))
 
 @app.route('/download_attendance_csv')
