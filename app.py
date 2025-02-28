@@ -451,23 +451,38 @@ def teacher_dashboard():
 
 @app.route('/mark_attendance', methods=['GET', 'POST'])
 def mark_attendance():
-    if 'user_id' in session and session['role'] == 'teacher':
-        subject_id = int(request.form['subject_id'])
-        student_ids = request.form.getlist('student_ids[]')
-        for student_id in student_ids:
-            status = request.form.get(f'status_{student_id}')
-            if status in ['Present', 'Absent']:
-                attendance = Attendance(
-                    student_id=int(student_id),
-                    subject_id=subject_id,
-                    date=date.today(),
-                    status=status
-                )
-                db.session.add(attendance)
-        db.session.commit()
-        flash("Attendance marked successfully!", "success")
-        return redirect(url_for('teacher_dashboard'))
-    return "Unauthorized Access"
+    if 'user_id' in session:
+        if session['role'] == 'teacher' and request.method == 'POST':
+            subject_id = int(request.form['subject_id'])
+            student_ids = request.form.getlist('student_ids[]')
+            for student_id in student_ids:
+                status = request.form.get(f'status_{student_id}')
+                if status in ['Present', 'Absent']:
+                    attendance = Attendance(
+                        student_id=int(student_id),
+                        subject_id=subject_id,
+                        date=date.today(),
+                        status=status
+                    )
+                    db.session.add(attendance)
+            db.session.commit()
+            flash("Attendance marked successfully!", "success")
+            return redirect(url_for('teacher_dashboard'))
+        elif session['role'] == 'student':
+            student_id = session['user_id']
+            user = User.query.get(student_id)
+            attendance_records = Attendance.query.filter_by(student_id=student_id).all()
+
+            total_classes = len(attendance_records)
+            present_count = sum(1 for record in attendance_records if record.status == 'Present')
+            attendance_percentage = (present_count / total_classes * 100) if total_classes > 0 else 0
+
+            return render_template('student_dashboard.html', 
+                                 attendance=attendance_records, 
+                                 percentage=attendance_percentage, 
+                                 current_user=user,
+                                 show_attendance=True)
+    return redirect(url_for('login'))
 
 
 # ---- STUDENT DASHBOARD ---- #

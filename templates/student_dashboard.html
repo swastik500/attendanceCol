@@ -212,6 +212,37 @@
     <div class="container">
         <h1><i class="fas fa-user-graduate"></i> Welcome, {{ current_user.username }}!</h1>
 
+        {% if show_attendance %}
+        <div class="attendance-container">
+            <h2><i class="fas fa-calendar-check"></i> My Attendance</h2>
+            <div class="attendance-summary">
+                <p>Overall Attendance: <strong>{{ "%.2f"|format(percentage) }}%</strong></p>
+            </div>
+            {% if attendance %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance %}
+                    <tr>
+                        <td>{{ record.subject.name }}</td>
+                        <td>{{ record.date }}</td>
+                        <td class="{{ 'present' if record.status == 'Present' else 'absent' }}">{{ record.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-records">No attendance records found.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
         {% if schedules is defined %}
         <div class="schedule-container">
             <h2><i class="fas fa-book-reader"></i> My Enrolled Courses</h2>

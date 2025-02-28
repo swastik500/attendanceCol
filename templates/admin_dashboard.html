@@ -245,31 +245,55 @@
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
+            max-height: 300px;
+            overflow-y: auto;
+            position: relative;
         }
 
-        table {
+        .table-container table {
             width: 100%;
             border-collapse: collapse;
             white-space: nowrap;
         }
 
-        th {
+        .table-container th {
             background: linear-gradient(135deg, #5c3f8c 0%, #8052c8 100%);
             color: white;
             font-weight: 500;
             text-align: left;
             padding: 1rem;
             font-size: 0.95rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        td {
+        .table-container td {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
             font-size: 0.95rem;
         }
 
-        tr:hover {
+        .table-container tr:hover {
             background-color: var(--secondary-color);
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
         }
 
         /* Action Links */
@@ -370,18 +394,20 @@
     <div class="sidebar">
         <div class="sidebar-background" id="sidebar-stars"></div>
         <div class="sidebar-moon"></div>
-        <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
-        <ul>
-            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
-            <li><a href="{{ url_for('manage_users') }}"><i class="fas fa-users"></i> Manage Users</a></li>
-        <li><a href="{{ url_for('manage_courses') }}"><i class="fas fa-book"></i> Manage Courses</a></li>
-        <li><a href="{{ url_for('manage_course_assignments') }}"><i class="fas fa-book-reader"></i> Course Assignments</a></li>
-        <li><a href="{{ url_for('manage_classes') }}"><i class="fas fa-chalkboard"></i> Manage Classes</a></li>
-        <li><a href="{{ url_for('manage_subjects') }}"><i class="fas fa-book-open"></i> Manage Subjects</a></li>
-        <li><a href="{{ url_for('manage_schedules') }}"><i class="fas fa-calendar-alt"></i> Manage Schedules</a></li>
-        <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-    </ul>
-</div>
+
+        <h2><i class="fas fa-university"></i> Admin Panel</h2>
+        <nav>
+            <ul>
+                <li><a href="/admin_dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="/register"><i class="fas fa-user-plus"></i> Register User</a></li>
+                <li><a href="/manage_courses"><i class="fas fa-book"></i> Manage Courses</a></li>
+                <li><a href="/add_class"><i class="fas fa-chalkboard"></i> Manage Classes</a></li>
+                <li><a href="/manage_users"><i class="fas fa-users"></i> View Users</a></li>
+                <li><a href="/manage_subjects"><i class="fas fa-book-open"></i> Manage subjects</a></li>
+                <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </div>
 
     <div class="container">
         <div class="content-wrapper">
